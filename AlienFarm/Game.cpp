@@ -1,0 +1,104 @@
+#include "Game.h"
+
+
+
+Game::Game(SDL_Window* window, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
+    //Run the game.
+    if (window != nullptr && renderer != nullptr) {
+        //Store the current times for the clock.
+        auto time1 = std::chrono::system_clock::now();
+        auto time2 = std::chrono::system_clock::now();
+
+
+        //Start the game loop and run until it's time to stop.
+        bool running = true;
+        while (running) {
+            //Determine how much time has elapsed since the last frame.
+            time2 = std::chrono::system_clock::now();
+            std::chrono::duration<float> timeDelta = time2 - time1;
+            float timeDeltaFloat = timeDelta.count();
+
+            //Store the new time for the next frame.
+            time1 = time2;
+
+            //The amount of time for each frame (no longer than 20 fps).
+            const float dT = std::min(timeDeltaFloat, 1.0f / 20.0f);
+
+            processEvents(running);
+            update(dT);
+            draw(renderer);
+        }
+    }
+}
+
+
+Game::~Game() {
+    //Clean up.
+    TextureLoader::deallocateTextures();
+}
+
+
+
+void Game::processEvents(bool& running) {
+    bool mouseDownThisFrame = false;
+
+    //Process events.
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+        case SDL_QUIT:
+            running = false;
+            break;
+
+        case SDL_MOUSEBUTTONDOWN:
+            mouseDownThisFrame = (mouseDownStatus == 0);
+            if (event.button.button == SDL_BUTTON_LEFT)
+                mouseDownStatus = SDL_BUTTON_LEFT;
+            else if (event.button.button == SDL_BUTTON_RIGHT)
+                mouseDownStatus = SDL_BUTTON_RIGHT;
+            break;
+        case SDL_MOUSEBUTTONUP:
+            mouseDownStatus = 0;
+            break;
+
+        case SDL_KEYDOWN:
+            switch (event.key.keysym.scancode) {
+                //Quit the game.
+            case SDL_SCANCODE_ESCAPE:
+                running = false;
+                break;
+            }
+        }
+    }
+
+
+    //Process input from the mouse cursor.
+    int mouseX = 0, mouseY = 0;
+    SDL_GetMouseState(&mouseX, &mouseY);
+    //Convert from the window's coordinate system to the game's coordinate system.
+    Vector2D posMouse((float)mouseX / tileSize, (float)mouseY / tileSize);
+
+    if (mouseDownStatus > 0) {
+        //The mouse was pressed.
+    }
+}
+
+
+
+void Game::update(float dT) {
+
+}
+
+
+
+void Game::draw(SDL_Renderer* renderer) {
+    //Draw.
+    //Set the background color.
+    SDL_SetRenderDrawColor(renderer, 255, 69, 40, 0);
+    //Clear the screen.
+    SDL_RenderClear(renderer);
+
+
+    //Send the image to the window.
+    SDL_RenderPresent(renderer);
+}
