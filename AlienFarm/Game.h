@@ -3,6 +3,7 @@
 #include "SDL2/SDL.h"
 #include "TextureLoader.h"
 #include "Vector2D.h"
+#include "Level.h"
 
 
 
@@ -21,4 +22,5 @@ private:
 	int mouseDownStatus = 0;
 
 	const int tileSize = 64;
+	Level level;
 };

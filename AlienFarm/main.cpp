@@ -3,7 +3,7 @@
 #include "Game.h"
 
 
-bool fullscreen = false;
+bool fullscreen = true;
 
 
 

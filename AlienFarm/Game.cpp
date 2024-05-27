@@ -2,7 +2,10 @@
 
 
 
-Game::Game(SDL_Window* window, SDL_Renderer* renderer, int windowWidth, int windowHeight) {
+Game::Game(SDL_Window* window, SDL_Renderer* renderer, int windowWidth, int windowHeight) :
+    level(windowWidth / tileSize + (windowWidth % tileSize > 0),
+        windowHeight / tileSize + (windowHeight % tileSize > 0))
+{
     //Run the game.
     if (window != nullptr && renderer != nullptr) {
         //Store the current times for the clock.
@@ -68,6 +71,14 @@ void Game::processEvents(bool& running) {
                 running = false;
                 break;
             }
+
+            //Select the levels tileTypeIDSelected
+            case SDL_SCANCODE_1:
+            case SDL_SCANCODE_2:
+            case SDL_SCANCODE_3:
+                int tileTypeID = event.key.keysym.scancode - SDL_SCANCODE_1;
+                level.setTileTypeIDSelected(tileTypeID);
+                break;
         }
     }
 
@@ -78,8 +89,13 @@ void Game::processEvents(bool& running) {
     //Convert from the window's coordinate system to the game's coordinate system.
     Vector2D posMouse((float)mouseX / tileSize, (float)mouseY / tileSize);
 
-    if (mouseDownStatus > 0) {
+    if (mouseDownStatus > 0) 
+    {
         //The mouse was pressed.
+        if(mouseDownStatus == SDL_BUTTON_LEFT)
+        {
+            level.placeTileTypeIDSelected((int)posMouse.x, (int)posMouse.y);
+        }
     }
 }
 
@@ -94,10 +110,12 @@ void Game::update(float dT) {
 void Game::draw(SDL_Renderer* renderer) {
     //Draw.
     //Set the background color.
-    SDL_SetRenderDrawColor(renderer, 255, 69, 40, 0);
+    SDL_SetRenderDrawColor(renderer, 255, 100, 0, 0);
     //Clear the screen.
     SDL_RenderClear(renderer);
 
+
+    level.draw(renderer, tileSize);
 
     //Send the image to the window.
     SDL_RenderPresent(renderer);
