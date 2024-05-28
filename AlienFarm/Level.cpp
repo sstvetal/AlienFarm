@@ -1,10 +1,10 @@
 #include "Level.h"
 
-Level::Level(int setTileCountX, int setTileCountY):
+Level::Level(SDL_Renderer* renderer, int setTileCountX, int setTileCountY):
 	tileCountX(setTileCountX),tileCountY(setTileCountY)
 {
 	size_t listTilesSize = (size_t)tileCountX * tileCountY;
-	listTiles.assign(listTilesSize, Tile());
+	listTiles.assign(listTilesSize, Tile(renderer));
 }
 
 void Level::draw(SDL_Renderer* renderer, int tileSize)
@@ -15,6 +15,7 @@ void Level::draw(SDL_Renderer* renderer, int tileSize)
 		{
 			int index = x + y * tileCountX;
 			listTiles[index].draw(renderer, x, y, tileSize);
+			listTiles[index].drawShadows(renderer, x, y, tileSize, listTiles, tileCountX, tileCountY);
 		}
 
 	}

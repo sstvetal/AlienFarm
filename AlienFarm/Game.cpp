@@ -3,7 +3,7 @@
 
 
 Game::Game(SDL_Window* window, SDL_Renderer* renderer, int windowWidth, int windowHeight) :
-    level(windowWidth / tileSize + (windowWidth % tileSize > 0),
+    level(renderer, windowWidth / tileSize + (windowWidth % tileSize > 0),
         windowHeight / tileSize + (windowHeight % tileSize > 0))
 {
     //Run the game.
@@ -76,6 +76,11 @@ void Game::processEvents(bool& running) {
             case SDL_SCANCODE_1:
             case SDL_SCANCODE_2:
             case SDL_SCANCODE_3:
+            case SDL_SCANCODE_4:
+            case SDL_SCANCODE_5:
+            case SDL_SCANCODE_6:
+            case SDL_SCANCODE_7:
+
                 int tileTypeID = event.key.keysym.scancode - SDL_SCANCODE_1;
                 level.setTileTypeIDSelected(tileTypeID);
                 break;

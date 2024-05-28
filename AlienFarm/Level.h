@@ -6,7 +6,7 @@
 class Level
 {
 public:
-	Level(int setTileCountX, int setTileCountY);
+	Level(SDL_Renderer* renderer, int setTileCountX, int setTileCountY);
 
 	void draw(SDL_Renderer* renderer, int tileSize);
 	void setTileTypeIDSelected(int setTileTypeIDSelected);
