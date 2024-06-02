@@ -141,6 +141,7 @@
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MathAddon.cpp" />
+    <ClCompile Include="Plant.cpp" />
     <ClCompile Include="TextureLoader.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="Timer.cpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="MathAddon.h" />
+    <ClInclude Include="Plant.h" />
     <ClInclude Include="TextureLoader.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="Timer.h" />

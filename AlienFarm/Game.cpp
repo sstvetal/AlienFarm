@@ -1,13 +1,14 @@
 #include "Game.h"
 
 
-
 Game::Game(SDL_Window* window, SDL_Renderer* renderer, int windowWidth, int windowHeight) :
+    placementModeCurrent(PlacementMode::tiles),
     level(renderer, windowWidth / tileSize + (windowWidth % tileSize > 0),
         windowHeight / tileSize + (windowHeight % tileSize > 0))
 {
     //Run the game.
-    if (window != nullptr && renderer != nullptr) {
+    if (window != nullptr && renderer != nullptr) 
+    {
         //Store the current times for the clock.
         auto time1 = std::chrono::system_clock::now();
         auto time2 = std::chrono::system_clock::now();
@@ -27,7 +28,7 @@ Game::Game(SDL_Window* window, SDL_Renderer* renderer, int windowWidth, int wind
             //The amount of time for each frame (no longer than 20 fps).
             const float dT = std::min(timeDeltaFloat, 1.0f / 20.0f);
 
-            processEvents(running);
+            processEvents(renderer, running);
             update(dT);
             draw(renderer);
         }
@@ -42,13 +43,16 @@ Game::~Game() {
 
 
 
-void Game::processEvents(bool& running) {
+void Game::processEvents(SDL_Renderer* renderer, bool& running) 
+{
     bool mouseDownThisFrame = false;
 
     //Process events.
     SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        switch (event.type) {
+    while (SDL_PollEvent(&event)) 
+    {
+        switch (event.type) 
+        {
         case SDL_QUIT:
             running = false;
             break;
@@ -65,12 +69,13 @@ void Game::processEvents(bool& running) {
             break;
 
         case SDL_KEYDOWN:
-            switch (event.key.keysym.scancode) {
+            switch (event.key.keysym.scancode) 
+            {
                 //Quit the game.
             case SDL_SCANCODE_ESCAPE:
                 running = false;
                 break;
-            }
+            
 
             //Select the levels tileTypeIDSelected
             case SDL_SCANCODE_1:
@@ -80,10 +85,16 @@ void Game::processEvents(bool& running) {
             case SDL_SCANCODE_5:
             case SDL_SCANCODE_6:
             case SDL_SCANCODE_7:
-
-                int tileTypeID = event.key.keysym.scancode - SDL_SCANCODE_1;
-                level.setTileTypeIDSelected(tileTypeID);
+            {int tileTypeID = event.key.keysym.scancode - SDL_SCANCODE_1;
+            level.setTileTypeIDSelected(tileTypeID);
+            placementModeCurrent = PlacementMode::tiles; }
+              break;
+ 
+                //Select the plant.
+            case SDL_SCANCODE_Q:
+                placementModeCurrent = PlacementMode::plants;
                 break;
+            }
         }
     }
 
@@ -97,22 +108,41 @@ void Game::processEvents(bool& running) {
     if (mouseDownStatus > 0) 
     {
         //The mouse was pressed.
-        if(mouseDownStatus == SDL_BUTTON_LEFT)
-        {
-            level.placeTileTypeIDSelected((int)posMouse.x, (int)posMouse.y);
-        }
+         switch (mouseDownStatus)
+         {
+         case SDL_BUTTON_LEFT:
+             switch (placementModeCurrent)
+             {
+             case PlacementMode::tiles:
+                 level.placeTileTypeIDSelected((int)posMouse.x, (int)posMouse.y);
+                 break;
+             case PlacementMode::plants:
+                 addPlant(renderer, posMouse);
+                 break;
+             }
+             break;
+
+         case SDL_BUTTON_RIGHT:
+             removePlantsAtMousePosition(posMouse);
+             break;
+         }
     }
 }
 
 
 
-void Game::update(float dT) {
-
+void Game::update(float dT) 
+{
+    for (auto& plantSelected : listPlants)
+    {
+        plantSelected.update(dT);
+    }
 }
 
 
 
-void Game::draw(SDL_Renderer* renderer) {
+void Game::draw(SDL_Renderer* renderer) 
+{
     //Draw.
     //Set the background color.
     SDL_SetRenderDrawColor(renderer, 255, 100, 0, 0);
@@ -122,6 +152,50 @@ void Game::draw(SDL_Renderer* renderer) {
 
     level.draw(renderer, tileSize);
 
+    for(auto& plantsSelected : listPlants)
+    {
+        plantsSelected.draw(renderer, tileSize);
+    }
+
     //Send the image to the window.
     SDL_RenderPresent(renderer);
+}
+
+void Game::addPlant(SDL_Renderer* renderer, Vector2D posMouse)
+{
+    bool foundPlant = false;
+
+    for (auto it = listPlants.begin(); it != listPlants.end() && foundPlant == false; it++)
+    {
+        if  ((int)(*it).getPos().x == (int)posMouse.x &&
+             (int)(*it).getPos().y == (int)posMouse.y)
+             foundPlant = true;
+    }
+
+    if(foundPlant == false)
+    {
+        float randOffsetX = (MathAddon::randFloat() * 2.0f - 1.0f) * 0.1f;
+        float randOffsetY = (MathAddon::randFloat() * 2.0f - 1.0f) * 0.1f;
+
+
+
+        Vector2D pos((int)posMouse.x + 0.5f + randOffsetX, (int)posMouse.y + 0.5f + randOffsetY);
+        listPlants.push_back(Plant(renderer, pos));
+    }
+
+}
+
+
+void Game::removePlantsAtMousePosition(Vector2D posMouse)
+{
+    for (auto it = listPlants.begin(); it != listPlants.end();)
+    {
+        if  ((int)(*it).getPos().x == (int)posMouse.x &&
+             (int)(*it).getPos().y == (int)posMouse.y)
+            it = listPlants.erase(it);
+        else
+        {
+            it++;
+        }
+    }
 }

@@ -10,6 +10,7 @@ class Tile
 private:
 	struct Type
 	{
+		std::string name = "";
 		int height = 0;
 		SDL_Color colorDark = {};
 		SDL_Color colorLight = {};
@@ -24,25 +25,17 @@ public:
 		std::vector<Tile>& listTiles, int tileCountX, int tileCountY);
 
 	void setTypeID(int setTypeID);
+	static void refreshSurrondingIsWet(int x, int y, std::vector<Tile>& listTiles, int tileCountX, int tileCountY);
 
 private:
 	bool isTileHigher(int x, int y, std::vector<Tile>& listTiles, int tileCountX, int tileCountY);
 
 
 	int typeID;
+	bool isWet = false;
 
 
 	static const std::vector<Type> listTileTypes;
 
-
-	SDL_Texture* textureTileShadowTop = nullptr,
-		* textureTileShadowRight = nullptr,
-		* textureTileShadowBottom = nullptr,
-		* textureTileShadowLeft = nullptr,
-
-
-	    * textureTileShadowTopLeft = nullptr,
-		* textureTileShadowTopRight = nullptr,
-		* textureTileShadowBottomLeft = nullptr,
-		* textureTileShadowBottomRight = nullptr;
+	static std::vector<SDL_Texture*> listTextureTileShadows;
 };

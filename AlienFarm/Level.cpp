@@ -34,5 +34,7 @@ void Level::placeTileTypeIDSelected(int x, int y)
 	   y > -1 && y < tileCountY)
 	{
 		listTiles[index].setTypeID(tileTypeIDSelected);
+
+		Tile::refreshSurrondingIsWet(x, y, listTiles, tileCountX, tileCountY);
 	}
 }

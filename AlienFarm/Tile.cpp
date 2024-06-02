@@ -2,29 +2,32 @@
 
 
 const std::vector<Tile::Type> Tile::listTileTypes = {
-	{ 0, SDL_Color{ 0, 60, 190 } , SDL_Color{ 0, 60, 190 } },           //water
-	{ 1, SDL_Color{ 80, 47, 30 } , SDL_Color{ 90, 56, 32 } },           //dirt
-	{ 2, SDL_Color{  100, 33, 60 } , SDL_Color{ 100, 50, 60 } },        //sand
-	{ 2, SDL_Color{  11, 100, 100 } , SDL_Color{ 14, 131, 131 } },      //green
-	{ 2, SDL_Color{  184, 176, 33 } , SDL_Color{ 218, 209, 50 } },      //yellow
-	{ 2, SDL_Color{  33, 41, 184 } , SDL_Color{ 50, 59, 218, } },       //blue
-	{ 2, SDL_Color{  167, 167, 167 } , SDL_Color{ 199, 199, 199 } }     //white
+	{ "water", 0, SDL_Color{ 0, 60, 190 } , SDL_Color{ 0, 60, 190 } },               //water
+	{ "dirt", 1, SDL_Color{ 80, 47, 30 } , SDL_Color{ 90, 56, 32 } },                //dirt
+	{ "sand",2, SDL_Color{  100, 33, 60 } , SDL_Color{ 100, 50, 60 } },              //sand
+	{ "grassGreen",2, SDL_Color{  11, 100, 100 } , SDL_Color{ 14, 131, 131 } },      //green
+	{ "grassYellow",2, SDL_Color{  184, 176, 33 } , SDL_Color{ 218, 209, 50 } },     //yellow
+	{ "grassBlue",2, SDL_Color{  33, 41, 184 } , SDL_Color{ 50, 59, 218, } },        //blue
+	{ "grassWhite",2, SDL_Color{  167, 167, 167 } , SDL_Color{ 199, 199, 199 } }     //white
 };
+
+std::vector<SDL_Texture*> Tile::listTextureTileShadows;
 
 
 Tile::Tile(SDL_Renderer* renderer) :
 	typeID(2)
 {
-	textureTileShadowTop = TextureLoader::loadTexture(renderer, "Tile Shadow Top.bmp");
-	textureTileShadowRight = TextureLoader::loadTexture(renderer, "Tile Shadow Right.bmp");
-	textureTileShadowBottom = TextureLoader::loadTexture(renderer, "Tile Shadow Bottom.bmp");
-	textureTileShadowLeft = TextureLoader::loadTexture(renderer, "Tile Shadow Left.bmp");
+	if(listTextureTileShadows.empty())
+	{
+		std::vector<std::string> listTileShadowNames{ "Top Left", "Top", "Top Right", "Left",
+			"Right", "Bottom Left", "Bottom", "Bottom Right"};
 
-
-	textureTileShadowTopLeft = TextureLoader::loadTexture(renderer, "Tile Shadow Top Left.bmp");
-	textureTileShadowTopRight = TextureLoader::loadTexture(renderer, "Tile Shadow Top Right.bmp");
-	textureTileShadowBottomLeft = TextureLoader::loadTexture(renderer, "Tile Shadow Bottom Left.bmp");
-	textureTileShadowBottomRight = TextureLoader::loadTexture(renderer, "Tile Shadow Bottom Right.bmp");
+		for(const auto& nameSelected : listTileShadowNames)
+		{
+			listTextureTileShadows.push_back(TextureLoader::loadTexture(renderer, 
+			    "Tile Shadow " + nameSelected + ".bmp"));
+		}
+	}
 }
 
 void Tile::draw(SDL_Renderer* renderer, int x, int y, int tileSize)
@@ -35,6 +38,13 @@ void Tile::draw(SDL_Renderer* renderer, int x, int y, int tileSize)
 		bool dark = ((x + y) % 2 == 0);
 
 		SDL_Color colorTile = (dark ? typeSelected.colorDark : typeSelected.colorLight);
+		if(typeSelected.name == "dirt" && isWet)
+		{
+			const float fWet = 0.65f;
+			colorTile.r = (Uint8)(colorTile.r * fWet);
+			colorTile.g = (Uint8)(colorTile.g * fWet);
+			colorTile.b = (Uint8)(colorTile.b * fWet);
+		}
 		SDL_SetRenderDrawColor(renderer, colorTile.r, colorTile.g, colorTile.b, 255);
 
 		SDL_Rect rect = { x * tileSize, y * tileSize, tileSize, tileSize };
@@ -48,45 +58,33 @@ void Tile::drawShadows(SDL_Renderer* renderer, int x, int y, int tileSize,
 {
 	SDL_Rect rect = { x * tileSize, y * tileSize, tileSize, tileSize };
 
-	if (isTileHigher(x, y - 1, listTiles, tileCountX, tileCountY) && textureTileShadowTop != nullptr)
-		SDL_RenderCopy(renderer, textureTileShadowTop, NULL, &rect);
 
-	if (isTileHigher(x + 1, y, listTiles, tileCountX, tileCountY) && textureTileShadowRight != nullptr)
-		SDL_RenderCopy(renderer, textureTileShadowRight, NULL, &rect);
+	//Loop through the list and draw each shadow image
+	for(int count = 0; count < listTextureTileShadows.size(); count++){
+		SDL_Texture* textureSelected = listTextureTileShadows[count];
 
-	if (isTileHigher(x, y + 1, listTiles, tileCountX, tileCountY) && textureTileShadowBottom != nullptr)
-		SDL_RenderCopy(renderer, textureTileShadowBottom, NULL, &rect);
+		if(textureSelected != nullptr){
+			int index = count;
+		    if(count >= 4)
+		     	index++;
 
-	if (isTileHigher(x - 1, y, listTiles, tileCountX, tileCountY) && textureTileShadowLeft != nullptr)
-		SDL_RenderCopy(renderer, textureTileShadowLeft, NULL, &rect);
+		    int xOff = index % 3 - 1;
+		    int yOff = index / 3 - 1;
 
+			bool isCorner = (abs(xOff) == 1 && abs(yOff) == 1);
+			if(isCorner){
+				if(isTileHigher( x + xOff, y + yOff, listTiles, tileCountX, tileCountY) &&
+				   isTileHigher( x + xOff, y, listTiles, tileCountX, tileCountY) == false &&
+				   isTileHigher( x, y + yOff, listTiles, tileCountX, tileCountY) == false)
+				   SDL_RenderCopy(renderer, textureSelected, NULL, &rect);
+			}
+			else{
+				if (isTileHigher(x + xOff, y + yOff, listTiles, tileCountX, tileCountY))
+					SDL_RenderCopy(renderer, textureSelected, NULL, &rect);
+			}
+		}
 
-	if (isTileHigher(x - 1 , y - 1 , listTiles, tileCountX, tileCountY) &&
-	   isTileHigher(x - 1 , y , listTiles, tileCountX, tileCountY) == false &&
-	   isTileHigher(x , y - 1 , listTiles, tileCountX, tileCountY) == false &&
-	   textureTileShadowTopLeft !=nullptr)
-	   SDL_RenderCopy(renderer, textureTileShadowTopLeft, NULL, &rect);
-
-
-	if (isTileHigher(x + 1 , y - 1 , listTiles, tileCountX, tileCountY) &&
-		isTileHigher(x + 1 , y , listTiles, tileCountX, tileCountY) == false &&
-		isTileHigher(x , y - 1 , listTiles, tileCountX, tileCountY) == false &&
-		textureTileShadowTopRight !=nullptr)
-		SDL_RenderCopy(renderer, textureTileShadowTopRight, NULL, &rect);
-
-
-	if (isTileHigher(x - 1 , y + 1 , listTiles, tileCountX, tileCountY) &&
-		isTileHigher(x - 1 , y , listTiles, tileCountX, tileCountY) == false &&
-		isTileHigher(x , y + 1 , listTiles, tileCountX, tileCountY) == false &&
-		textureTileShadowBottomLeft !=nullptr)
-		SDL_RenderCopy(renderer, textureTileShadowBottomLeft, NULL, &rect);
-
-
-	if (isTileHigher(x + 1 , y + 1 , listTiles, tileCountX, tileCountY) &&
-		isTileHigher(x + 1 , y , listTiles, tileCountX, tileCountY) == false &&
-		isTileHigher(x , y + 1 , listTiles, tileCountX, tileCountY) == false &&
-		textureTileShadowBottomRight !=nullptr)
-		SDL_RenderCopy(renderer, textureTileShadowBottomRight, NULL, &rect);
+	}	
 }
 
 
@@ -95,6 +93,52 @@ void Tile::setTypeID(int setTypeID)
 	if(setTypeID > -1 && setTypeID < listTileTypes.size())
 	{
 		typeID = setTypeID;
+	}
+}
+
+void Tile::refreshSurrondingIsWet(int x, int y, std::vector<Tile>& listTiles, int tileCountX, int tileCountY)
+{
+	const int distance = 2;
+
+	for(int x2 = x - distance; x2 <= x + distance; x2++)
+	{
+		for (int y2 = y - distance; y2 <= y + distance; y2++)
+		{
+			int index2 = x2 + y2 * tileCountX;
+			if (index2 > -1 && index2 < listTiles.size() &&
+				x2 > -1 && x2 < tileCountX &&
+				y2 > -1 && y2 < tileCountY) {
+			
+			
+				bool foundWater = false;
+
+				for(int x3 = x2 - distance; x3 <= x2 + distance && foundWater == false; x3++)
+				{
+					for (int y3 = y2 - distance; y3 <= y2 + distance && foundWater == false; y3++)
+					{
+						int index3 = x3 + y3 * tileCountX;
+						if (index3 > -1 && index3 < listTiles.size() &&
+							x3 > -1 && x3 < tileCountX &&
+							y3 > -1 && y3 < tileCountY)
+						{
+							int typeIDSelected = listTiles[index3].typeID;
+							if(typeIDSelected > -1 && typeIDSelected < listTileTypes.size() &&
+							   listTileTypes[typeIDSelected].name == "water")
+							{
+								foundWater = true;
+							}
+
+
+						}
+
+					}
+				}
+
+				listTiles[index2].isWet = foundWater;
+
+			}
+			   
+		}
 	}
 }
 
