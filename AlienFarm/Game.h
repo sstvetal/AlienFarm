@@ -29,6 +29,7 @@ private:
 	void processEvents(SDL_Renderer* renderer, bool& running);
 	void update(float dT);
 	void draw(SDL_Renderer* renderer);
+	void setPlantTypeIDSelected(int setPlantTypeIDSelected);
 	void addPlant(SDL_Renderer* renderer, Vector2D posMouse);
 	void removePlantsAtMousePosition(Vector2D poseMouse);
 
@@ -36,6 +37,8 @@ private:
 
 	const int tileSize = 64;
 	Level level;
+
+	int plantTypeIDSelected = 0;
 
 	std::vector<Plant> listPlants;
 };

@@ -92,7 +92,19 @@ void Game::processEvents(SDL_Renderer* renderer, bool& running)
  
                 //Select the plant.
             case SDL_SCANCODE_Q:
-                placementModeCurrent = PlacementMode::plants;
+                setPlantTypeIDSelected(0);
+                break;
+            case SDL_SCANCODE_W:
+                setPlantTypeIDSelected(1);
+                break;
+            case SDL_SCANCODE_E:
+                setPlantTypeIDSelected(2);
+                break;
+            case SDL_SCANCODE_R:
+                setPlantTypeIDSelected(3);
+                break;
+            case SDL_SCANCODE_T:
+                setPlantTypeIDSelected(4);
                 break;
             }
         }
@@ -161,15 +173,22 @@ void Game::draw(SDL_Renderer* renderer)
     SDL_RenderPresent(renderer);
 }
 
+void Game::setPlantTypeIDSelected(int setPlantTypeIDSelected)
+{
+    plantTypeIDSelected = setPlantTypeIDSelected;
+    placementModeCurrent = PlacementMode::plants;
+}
+
 void Game::addPlant(SDL_Renderer* renderer, Vector2D posMouse)
 {
     bool foundPlant = false;
 
     for (auto it = listPlants.begin(); it != listPlants.end() && foundPlant == false; it++)
     {
-        if  ((int)(*it).getPos().x == (int)posMouse.x &&
-             (int)(*it).getPos().y == (int)posMouse.y)
-             foundPlant = true;
+        if ((*it).checkOverlapWithPlantTypeID((int)posMouse.x, (int)posMouse.y, plantTypeIDSelected))
+        {
+            foundPlant = true;
+        }
     }
 
     if(foundPlant == false)
@@ -180,7 +199,7 @@ void Game::addPlant(SDL_Renderer* renderer, Vector2D posMouse)
 
 
         Vector2D pos((int)posMouse.x + 0.5f + randOffsetX, (int)posMouse.y + 0.5f + randOffsetY);
-        listPlants.push_back(Plant(renderer, pos));
+        listPlants.push_back(Plant(renderer, plantTypeIDSelected, pos));
     }
 
 }
@@ -190,8 +209,7 @@ void Game::removePlantsAtMousePosition(Vector2D posMouse)
 {
     for (auto it = listPlants.begin(); it != listPlants.end();)
     {
-        if  ((int)(*it).getPos().x == (int)posMouse.x &&
-             (int)(*it).getPos().y == (int)posMouse.y)
+        if((*it).checkOverlapWithMouse((int)posMouse.x, (int)posMouse.y))
             it = listPlants.erase(it);
         else
         {
