@@ -9,8 +9,10 @@ public:
 	Level(SDL_Renderer* renderer, int setTileCountX, int setTileCountY);
 
 	void draw(SDL_Renderer* renderer, int tileSize);
+	void drawSahdows(SDL_Renderer* renderer, int tileSize);
 	void setTileTypeIDSelected(int setTileTypeIDSelected);
 	void placeTileTypeIDSelected(int x, int y);
+	bool checkIfTileOkForPlant(int x, int y, bool growsOnWetDirt);
 
 
 private:

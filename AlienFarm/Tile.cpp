@@ -165,3 +165,23 @@ bool Tile::isTileHigher(int x, int y,
 
 	return false;
 }
+
+bool Tile::checkIfOkForPlant(bool growsOnWetDirt)
+{
+	if(typeID > -1 && typeID < listTileTypes.size())
+	{
+		if (listTileTypes[typeID].name == "water")
+		{
+			return false;
+		}
+		else if(listTileTypes[typeID].name == "dirt")
+		{
+			return (growsOnWetDirt ? isWet : false);
+		}
+		else if(listTileTypes[typeID].name.substr(0,5) == "grass")
+		{
+			return  (growsOnWetDirt ? false : true);
+		}
+	}
+	return false;
+}

@@ -9,6 +9,12 @@ Game::Game(SDL_Window* window, SDL_Renderer* renderer, int windowWidth, int wind
     //Run the game.
     if (window != nullptr && renderer != nullptr) 
     {
+
+        textureShadows = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888,
+                  SDL_TEXTUREACCESS_TARGET, windowWidth, windowHeight);
+        SDL_SetTextureBlendMode(textureShadows, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureAlphaMod(textureShadows, (int)round(255 * 0.60f));
+
         //Store the current times for the clock.
         auto time1 = std::chrono::system_clock::now();
         auto time2 = std::chrono::system_clock::now();
@@ -38,6 +44,12 @@ Game::Game(SDL_Window* window, SDL_Renderer* renderer, int windowWidth, int wind
 
 Game::~Game() {
     //Clean up.
+    if(textureShadows != nullptr)
+    {
+        SDL_DestroyTexture(textureShadows);
+        textureShadows = nullptr;
+    }
+
     TextureLoader::deallocateTextures();
 }
 
@@ -127,6 +139,7 @@ void Game::processEvents(SDL_Renderer* renderer, bool& running)
              {
              case PlacementMode::tiles:
                  level.placeTileTypeIDSelected((int)posMouse.x, (int)posMouse.y);
+                 removePlantsIfTilesChanged();
                  break;
              case PlacementMode::plants:
                  addPlant(renderer, posMouse);
@@ -164,6 +177,22 @@ void Game::draw(SDL_Renderer* renderer)
 
     level.draw(renderer, tileSize);
 
+    SDL_SetRenderTarget(renderer, textureShadows);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+
+
+    level.drawSahdows(renderer, tileSize);
+
+    for(auto& plantSelected : listPlants)
+    {
+        plantSelected.drawShadow(renderer, tileSize);
+    }
+
+    SDL_SetRenderTarget(renderer, NULL);
+
+    SDL_RenderCopy(renderer, textureShadows, NULL, NULL);
+
     for(auto& plantsSelected : listPlants)
     {
         plantsSelected.draw(renderer, tileSize);
@@ -181,25 +210,28 @@ void Game::setPlantTypeIDSelected(int setPlantTypeIDSelected)
 
 void Game::addPlant(SDL_Renderer* renderer, Vector2D posMouse)
 {
-    bool foundPlant = false;
-
-    for (auto it = listPlants.begin(); it != listPlants.end() && foundPlant == false; it++)
+    if(Plant::checkIfTilesUnderOkForType((int)posMouse.x, (int)posMouse.y, plantTypeIDSelected, level))
     {
-        if ((*it).checkOverlapWithPlantTypeID((int)posMouse.x, (int)posMouse.y, plantTypeIDSelected))
+        bool foundPlant = false;
+
+        for (auto it = listPlants.begin(); it != listPlants.end() && foundPlant == false; it++)
         {
-            foundPlant = true;
+            if ((*it).checkOverlapWithPlantTypeID((int)posMouse.x, (int)posMouse.y, plantTypeIDSelected))
+            {
+                foundPlant = true;
+            }
         }
-    }
 
-    if(foundPlant == false)
-    {
-        float randOffsetX = (MathAddon::randFloat() * 2.0f - 1.0f) * 0.1f;
-        float randOffsetY = (MathAddon::randFloat() * 2.0f - 1.0f) * 0.1f;
-
+        if(foundPlant == false)
+        {
+            float randOffsetX = (MathAddon::randFloat() * 2.0f - 1.0f) * 0.1f;
+            float randOffsetY = (MathAddon::randFloat() * 2.0f - 1.0f) * 0.1f;
 
 
-        Vector2D pos((int)posMouse.x + 0.5f + randOffsetX, (int)posMouse.y + 0.5f + randOffsetY);
-        listPlants.push_back(Plant(renderer, plantTypeIDSelected, pos));
+
+            Vector2D pos((int)posMouse.x + 0.5f + randOffsetX, (int)posMouse.y + 0.5f + randOffsetY);
+            listPlants.push_back(Plant(renderer, plantTypeIDSelected, pos));
+        }
     }
 
 }
@@ -216,4 +248,13 @@ void Game::removePlantsAtMousePosition(Vector2D posMouse)
             it++;
         }
     }
+}
+
+void Game::removePlantsIfTilesChanged()
+{
+    for (auto it = listPlants.begin(); it != listPlants.end();)
+        if ((*it).checkIfTilesUnderOK(level) == false)
+            it = listPlants.erase(it);
+        else
+            it++;
 }

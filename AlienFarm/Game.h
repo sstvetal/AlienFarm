@@ -32,6 +32,7 @@ private:
 	void setPlantTypeIDSelected(int setPlantTypeIDSelected);
 	void addPlant(SDL_Renderer* renderer, Vector2D posMouse);
 	void removePlantsAtMousePosition(Vector2D poseMouse);
+	void removePlantsIfTilesChanged();
 
 	int mouseDownStatus = 0;
 
@@ -41,4 +42,6 @@ private:
 	int plantTypeIDSelected = 0;
 
 	std::vector<Plant> listPlants;
+
+	SDL_Texture* textureShadows = nullptr;
 };

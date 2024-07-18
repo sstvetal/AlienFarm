@@ -3,11 +3,11 @@
 
 const std::vector<Plant::Type> Plant::listPlantTypes =
 {
-	{"Plant 1", 1},
-	{"Plant 2", 1},
-	{"Plant 3", 1},
-	{"Plant 4", 2},
-	{"Plant 5", 2},
+	{"Plant 1", 1, true},
+	{"Plant 2", 1, true},
+	{"Plant 3", 1, false},
+	{"Plant 4", 2, false},
+	{"Plant 5", 2, false},
 };
 
 
@@ -48,15 +48,25 @@ void Plant::draw(SDL_Renderer* renderer, int tileSize)
 {
 	if(timerGrowth.timeSIsMax())
 	{
-		drawTexture(renderer, textureShadow, tileSize);
 		drawTexture(renderer, textureMain, tileSize);
 	}
 	else
 	{
-		drawTexture(renderer, textureSmallShadow, tileSize);
 		drawTexture(renderer, textureSmallMain, tileSize);
 	}
 
+}
+
+void Plant::drawShadow(SDL_Renderer* renderer, int tileSize)
+{
+	if(timerGrowth.timeSIsMax())
+	{
+		drawTexture(renderer, textureShadow, tileSize);
+	}
+	else
+	{
+		drawTexture(renderer, textureSmallShadow, tileSize);
+	}
 }
 
 bool Plant::checkOverlapWithPlantTypeID(int x, int y, int plantTypeID)
@@ -71,6 +81,39 @@ bool Plant::checkOverlapWithPlantTypeID(int x, int y, int plantTypeID)
 bool Plant::checkOverlapWithMouse(int x, int y)
 {
 	return checkOverlap(x, y, 1);
+}
+
+bool Plant::checkIfTilesUnderOK(Level& level)
+{
+	float offset = computeOffset();
+
+	int x = (int)(pos.x - offset);
+	int y = (int)(pos.y - offset);
+
+	return checkIfTilesUnderOkForType(x, y, typeID, level);
+}
+
+bool Plant::checkIfTilesUnderOkForType(int x, int y, int plantTypeID, Level& level)
+{
+	if(plantTypeID > -1 && plantTypeID < listPlantTypes.size())
+	{
+		const Type& typeSelected = listPlantTypes[plantTypeID];
+
+		int rectLeft = x;
+		int rectTop = y;
+		int rectRight = rectLeft + typeSelected.size - 1;
+		int rectBottom = rectTop + typeSelected.size - 1;
+
+		for(int y2 = rectTop; y2 <= rectBottom; y2++)
+			for(int x2 = rectLeft; x2 <= rectRight; x2++)
+				if(level.checkIfTileOkForPlant(x2, y2, typeSelected.growsOnWetDirt) == false)
+				{
+					return false;
+				}
+		return true;
+
+	}
+	return false;
 }
 
 void Plant::drawTexture(SDL_Renderer* renderer, SDL_Texture* textureSelected, int tileSize)

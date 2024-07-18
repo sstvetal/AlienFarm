@@ -27,9 +27,10 @@ public:
 	void setTypeID(int setTypeID);
 	static void refreshSurrondingIsWet(int x, int y, std::vector<Tile>& listTiles, int tileCountX, int tileCountY);
 
+	bool checkIfOkForPlant(bool growsOnWetDirt);
+
 private:
 	bool isTileHigher(int x, int y, std::vector<Tile>& listTiles, int tileCountX, int tileCountY);
-
 
 	int typeID;
 	bool isWet = false;
